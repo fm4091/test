@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}PDF De-Identifier - Upload{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Hero section -->
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-gray-800 mb-3">PDF De-Identification Tool</h1>
+        <p class="text-lg text-gray-600">
+            Upload your PDF documents to automatically detect and de-identify personally identifiable information (PII).
+        </p>
+    </div>
+    
+    <!-- Features section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-blue-600 text-2xl mb-4">
+                <i class="fas fa-upload"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Simple Upload</h3>
+            <p class="text-gray-600">Just drag and drop your PDF file or click to browse.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-blue-600 text-2xl mb-4">
+                <i class="fas fa-user-secret"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Automatic Detection</h3>
+            <p class="text-gray-600">Identifies names, emails, SSNs, phone numbers, and more.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-blue-600 text-2xl mb-4">
+                <i class="fas fa-download"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Visual Results</h3>
+            <p class="text-gray-600">Get a visualized PDF with highlighted PII and mapping information.</p>
+        </div>
+    </div>
+    
+    <!-- Upload form -->
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Upload Your PDF Document</h2>
+        
+        <form id="upload-form" action="/upload/" method="POST" enctype="multipart/form-data" class="mb-6">
+            <div id="drop-zone" class="drop-zone mb-4">
+                <div id="drop-zone-content">
+                    <i class="fas fa-file-pdf text-blue-500 text-4xl mb-3"></i>
+                    <p class="mb-2">Drag & drop your PDF file here</p>
+                    <p class="text-sm text-gray-500">or</p>
+                    <button type="button" id="browse-button" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        Browse Files
+                    </button>
+                    <input type="file" id="file-input" name="file" accept=".pdf" class="hidden" />
+                </div>
+                
+                <div id="file-details" class="hidden mt-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-file-pdf text-blue-500 text-xl mr-2"></i>
+                        <span id="file-name" class="text-gray-700"></span>
+                        <button type="button" id="remove-file" class="ml-2 text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="upload-controls" class="hidden">
+                <button type="submit" class="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    De-identify PDF
+                </button>
+            </div>
+        </form>
+        
+        <!-- Processing animation -->
+        <div id="processing" class="hidden text-center py-6">
+            <div class="inline-block loading-spinner text-blue-600 text-3xl mb-3">
+                <i class="fas fa-circle-notch"></i>
+            </div>
+            <p class="text-lg text-gray-700">Processing your document...</p>
+            <p class="text-sm text-gray-500 mt-2">This may take a few moments depending on file size.</p>
+        </div>
+    </div>
+    
+    <!-- Recent jobs section -->
+    {% if jobs %}
+    <div class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Recent Documents</h2>
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for job_id, job in jobs.items() %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-pdf text-blue-500 mr-2"></i>
+                                    <span class="text-sm text-gray-900">{{ job.original_filename }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if job.status == "processing" %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Processing...
+                                </span>
+                                {% elif job.status == "completed" %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Completed
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Failed
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="/status/{{ job_id }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class="fas fa-eye mr-1"></i> View
+                                </a>
+                                {% if job.status == "completed" %}
+                                <a href="/download/{{ job_id }}" class="text-green-600 hover:text-green-900">
+                                    <i class="fas fa-download mr-1"></i> Download
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const browseButton = document.getElementById('browse-button');
+        const removeFileButton = document.getElementById('remove-file');
+        const uploadForm = document.getElementById('upload-form');
+        const fileDetails = document.getElementById('file-details');
+        const fileName = document.getElementById('file-name');
+        const uploadControls = document.getElementById('upload-controls');
+        const processing = document.getElementById('processing');
+        const dropZoneContent = document.getElementById('drop-zone-content');
+        
+        // Open file dialog when button is clicked
+        browseButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Handle drag & drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropZone.classList.add('active');
+        }
+        
+        function unhighlight() {
+            dropZone.classList.remove('active');
+        }
+        
+        // Handle dropped files
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        }
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                handleFiles(this.files);
+            }
+        });
+        
+        // Process the selected file
+        function handleFiles(files) {
+            const file = files[0];
+            
+            // Check if it's a PDF
+            if (file.type !== 'application/pdf') {
+                alert('Please upload a PDF file.');
+                return;
+            }
+            
+            // Display file details
+            fileName.textContent = file.name;
+            fileDetails.classList.remove('hidden');
+            uploadControls.classList.remove('hidden');
+            
+            // Update drop zone
+            dropZoneContent.classList.add('hidden');
+            dropZone.classList.add('flex', 'items-center', 'justify-center');
+        }
+        
+        // Remove selected file
+        removeFileButton.addEventListener('click', function() {
+            fileInput.value = '';
+            resetFileUpload();
+        });
+        
+        function resetFileUpload() {
+            fileName.textContent = '';
+            fileDetails.classList.add('hidden');
+            uploadControls.classList.add('hidden');
+            dropZoneContent.classList.remove('hidden');
+            dropZone.classList.remove('flex', 'items-center', 'justify-center');
+        }
+        
+        // Handle form submission
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check if a file is selected
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file to upload.');
+                return;
+            }
+            
+            // Show processing animation
+            fileDetails.classList.add('hidden');
+            uploadControls.classList.add('hidden');
+            processing.classList.remove('hidden');
+            
+            // Submit the form using fetch
+            const formData = new FormData(uploadForm);
+            
+            fetch('/upload/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while uploading the file. Please try again.');
+                processing.classList.add('hidden');
+                resetFileUpload();
+            });
+        });
+    });
+</script>
+{% endblock %} 

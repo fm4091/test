@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PDF De-Identifier{% endblock %}</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    PDF De-Identifier
+                </a>
+                <div class="text-sm">
+                    <a href="https://github.com/fm4091/test" target="_blank" class="text-white hover:text-blue-200 transition">
+                        <i class="fab fa-github mr-1"></i>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container mx-auto px-4 py-8 page-transition">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="bg-gray-100 border-t py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gray-600 text-sm mb-4 md:mb-0">
+                    &copy; 2025 PDF De-Identifier | Powered by Microsoft Presidio
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">Home</a>
+                    <a href="https://github.com/microsoft/presidio" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">Presidio</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
